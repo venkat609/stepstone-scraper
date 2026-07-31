@@ -1,6 +1,7 @@
 from curl_cffi import requests
 import json
 
+# Public tech and startup job board API
 url = "https://remoteok.com/api"
 
 headers = {
@@ -16,24 +17,30 @@ try:
     
     listings = data[1:] if isinstance(data, list) and len(data) > 1 else []
     
+    # Strict matching parameters for your background
+    primary_roles = ['engineer', 'developer', 'student', 'werkstudent', 'intern', 'analyst', 'data', 'ml']
+    domain_terms = ['elektrotechnik', 'electrical', 'computer', 'battery', 'storage', 'solar', 'motor', 'energy', 'bess', 'power', 'grid', 'machine learning']
+    
     for item in listings:
-        title = item.get('position')
+        title = item.get('position', '')
         tags = item.get('tags', [])
         location = item.get('location', '')
         
-        if title:
-            text_check = (title + " " + " ".join(tags) + " " + location).lower()
-            
-            # Broadened filter to catch general student, engineering, data, and ML listings
-            if any(kw in text_check for kw in ['engineer', 'developer', 'student', 'intern', 'analyst', 'data', 'ml', 'software']):
-                jobs.append({
-                    "title": title,
-                    "company": item.get('company'),
-                    "location": location if location else "Remote",
-                    "link": item.get('url')
-                })
+        text_check = (title + " " + " ".join(tags) + " " + location).lower()
+        
+        # Must contain a core student/engineering role AND at least one domain keyword
+        has_role = any(r in text_check for r in primary_roles)
+        has_domain = any(d in text_check for d in domain_terms)
+        
+        if has_role and has_domain:
+            jobs.append({
+                "title": title,
+                "company": item.get('company'),
+                "location": location if location else "Germany / Remote",
+                "link": item.get('url')
+            })
 
-    print(f"Found {len(jobs)} matching listings:")
+    print(f"Found {len(jobs)} specialized listings:")
     print(json.dumps(jobs[:10], indent=2))
 
 except Exception as e:
