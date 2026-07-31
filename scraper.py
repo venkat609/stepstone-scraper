@@ -1,15 +1,12 @@
-import requests
+from curl_cffi import requests
 from bs4 import BeautifulSoup
 import json
 
 url = "https://www.stepstone.de/work/werkstudent-software-engineer-munich"
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"
-}
 
 try:
-    response = requests.get(url, headers=headers, timeout=10)
+    # Impersonate chrome to bypass anti-bot protections completely for free
+    response = requests.get(url, impersonate="chrome120", timeout=15)
     print(f"Status Code: {response.status_code}")
     
     soup = BeautifulSoup(response.text, 'html.parser')
