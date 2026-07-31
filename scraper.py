@@ -1,7 +1,6 @@
 from curl_cffi import requests
 import json
 
-# Public tech and engineering API endpoint
 url = "https://remoteok.com/api"
 
 headers = {
@@ -15,15 +14,7 @@ try:
     data = response.json()
     jobs = []
     
-    # Skip the first metadata element
     listings = data[1:] if isinstance(data, list) and len(data) > 1 else []
-    
-    # Target keywords matching your exact background requirements
-    target_keywords = [
-        'elektrotechnik', 'electrical', 'computer engineering', 'data engineer', 
-        'machine learning', 'ml engineer', 'data analyst', 'battery', 'storage', 
-        'solar', 'motor', 'energy', 'bess', 'power', 'grid'
-    ]
     
     for item in listings:
         title = item.get('position')
@@ -32,17 +23,17 @@ try:
         
         if title:
             text_check = (title + " " + " ".join(tags) + " " + location).lower()
-            # Match if it contains engineering/data roles AND energy/battery/solar domain terms
-            if any(kw in text_check for kw in ['engineer', 'developer', 'student', 'intern', 'analyst', 'data', 'ml']) and \
-               any(domain in text_check for domain in ['battery', 'storage', 'solar', 'energy', 'motor', 'power', 'grid', 'elektrotechnik']):
+            
+            # Broadened filter to catch general student, engineering, data, and ML listings
+            if any(kw in text_check for kw in ['engineer', 'developer', 'student', 'intern', 'analyst', 'data', 'ml', 'software']):
                 jobs.append({
                     "title": title,
                     "company": item.get('company'),
-                    "location": location if location else "Germany / Remote",
+                    "location": location if location else "Remote",
                     "link": item.get('url')
                 })
 
-    print(f"Found {len(jobs)} targeted Energy/Battery/Data student listings:")
+    print(f"Found {len(jobs)} matching listings:")
     print(json.dumps(jobs[:10], indent=2))
 
 except Exception as e:
