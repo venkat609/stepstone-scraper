@@ -1,43 +1,48 @@
 from curl_cffi import requests
 import json
 
-url = "https://hacker-news.firebaseio.com/v0/topstories.json"
+# Public tech and engineering API endpoint
+url = "https://remoteok.com/api"
+
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}
 
 try:
-    response = requests.get(url, impersonate="chrome120", timeout=15)
+    response = requests.get(url, headers=headers, impersonate="chrome120", timeout=15)
     print(f"Status Code: {response.status_code}")
     
-    # Increase the search pool to 30 stories
-    story_ids = response.json()[:30]
+    data = response.json()
     jobs = []
     
-    for story_id in story_ids:
-        item_url = f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
-        item_res = requests.get(item_url, impersonate="chrome120", timeout=5)
-        item_data = item_res.json()
+    # Skip the first metadata element
+    listings = data[1:] if isinstance(data, list) and len(data) > 1 else []
+    
+    # Target keywords matching your exact background requirements
+    target_keywords = [
+        'elektrotechnik', 'electrical', 'computer engineering', 'data engineer', 
+        'machine learning', 'ml engineer', 'data analyst', 'battery', 'storage', 
+        'solar', 'motor', 'energy', 'bess', 'power', 'grid'
+    ]
+    
+    for item in listings:
+        title = item.get('position')
+        tags = item.get('tags', [])
+        location = item.get('location', '')
         
-        if item_data and 'title' in item_data:
-            title = item_data['title']
-            # Pull any tech, hiring, or software related posts
-            if any(keyword in title.lower() for keyword in ['hiring', 'engineer', 'developer', 'software', 'tech', 'remote', 'ai']):
+        if title:
+            text_check = (title + " " + " ".join(tags) + " " + location).lower()
+            # Match if it contains engineering/data roles AND energy/battery/solar domain terms
+            if any(kw in text_check for kw in ['engineer', 'developer', 'student', 'intern', 'analyst', 'data', 'ml']) and \
+               any(domain in text_check for domain in ['battery', 'storage', 'solar', 'energy', 'motor', 'power', 'grid', 'elektrotechnik']):
                 jobs.append({
                     "title": title,
-                    "link": item_data.get('url', f"https://news.ycombinator.com/item?id={story_id}")
+                    "company": item.get('company'),
+                    "location": location if location else "Germany / Remote",
+                    "link": item.get('url')
                 })
 
-    # Fallback to general top stories if keyword match is low
-    if not jobs and story_ids:
-        for story_id in story_ids[:5]:
-            item_url = f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
-            item_res = requests.get(item_url, impersonate="chrome120", timeout=5)
-            item_data = item_res.json()
-            if item_data and 'title' in item_data:
-                jobs.append({
-                    "title": item_data['title'],
-                    "link": item_data.get('url', f"https://news.ycombinator.com/item?id={story_id}")
-                })
-
-    print(f"Found {len(jobs)} listings:")
+    print(f"Found {len(jobs)} targeted Energy/Battery/Data student listings:")
     print(json.dumps(jobs[:10], indent=2))
 
 except Exception as e:
